@@ -1,0 +1,25 @@
+# SQLite database
+friboi_catalogo.db
+
+# Logs & PIDs
+*.log
+*.pid
+
+# Python environment/cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local exports (planilhas de teste ou geradas)
+*.csv
+*.xls
+*.xlsx
+
+# Temporary/test scripts
+export_csv.py
+export_formats.py
+export_xls_html.py
+export_utf8_sig.py
+export_novos_nomes.py
+export_novos_nomes.py.bak
+export_xls_html.py.bak
