@@ -61,8 +61,8 @@ generate_xlsx(
 
 # 2. Exporta todo o catálogo de produtos para XLSX
 generate_xlsx(
-    "SELECT sku, title, descrFiscal, ean, dun, marca, classe, conservacao, pesoLiquido, pesoBruto, url FROM produtos", 
-    ['sku', 'title', 'descrFiscal', 'ean', 'dun', 'marca', 'classe', 'conservacao', 'pesoLiquido', 'pesoBruto', 'url'], 
+    "SELECT sku, title, descrFiscal, ean, dun, marca, classe, conservacao, pesoLiquido, pesoBruto, url, image_url FROM produtos", 
+    ['sku', 'title', 'descrFiscal', 'ean', 'dun', 'marca', 'classe', 'conservacao', 'pesoLiquido', 'pesoBruto', 'url', 'image_url'], 
     'friboi_produtos_final.xlsx'
 )
 
