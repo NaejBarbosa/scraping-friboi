@@ -23,3 +23,8 @@ export_utf8_sig.py
 export_novos_nomes.py
 export_novos_nomes.py.bak
 export_xls_html.py.bak
+
+# Node.js processador-imagens generated files
+processador-imagens/imagens_preparadas/
+processador-imagens/node_modules/
+processador-imagens/package-lock.json
