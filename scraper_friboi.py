@@ -60,7 +60,8 @@ def init_db(db_path):
             conservacao TEXT,
             pesoLiquido TEXT,
             pesoBruto TEXT,
-            url TEXT
+            url TEXT,
+            image_url TEXT
         )
     """)
     
@@ -308,6 +309,7 @@ def process_product(url, html_content):
     cat_path = ""
     weight_api = None
     peso_vol_api = None
+    image_url = ""
     
     # 1. Tenta extrair dados iniciais do JSON-LD na página do produto (BeautifulSoup)
     script_ld = soup.find('script', id='CC-schema-org-server', type='application/ld+json')
@@ -343,6 +345,12 @@ def process_product(url, html_content):
             cat_path = api_data.get('parentCategoryIdPath', '')
             weight_api = api_data.get('weight')
             peso_vol_api = api_data.get('x_nPesoMedioVolume')
+            api_image = api_data.get('primaryFullImageURL') or api_data.get('primaryMediumImageURL') or api_data.get('primaryLargeImageURL')
+            if api_image:
+                if api_image.startswith('/'):
+                    image_url = "https://www.friboionline.com.br" + api_image
+                else:
+                    image_url = api_image
     except Exception as e:
         # Prossegue com os dados capturados via HTML se a API falhar
         print(f"\n[!] Aviso: Não foi possível enriquecer o SKU {sku} via API: {str(e)}")
@@ -376,7 +384,8 @@ def process_product(url, html_content):
         'conservacao': conservacao,
         'pesoLiquido': peso_liq,
         'pesoBruto': peso_bruto,
-        'url': url
+        'url': url,
+        'image_url': image_url
     }
 
 def main():
@@ -470,9 +479,9 @@ def main():
             # Salva os dados na tabela de produtos utilizando INSERT OR IGNORE para evitar duplicidades
             cursor.execute("""
                 INSERT OR IGNORE INTO produtos (
-                    sku, title, descrFiscal, ean, dun, marca, classe, conservacao, pesoLiquido, pesoBruto, url
+                    sku, title, descrFiscal, ean, dun, marca, classe, conservacao, pesoLiquido, pesoBruto, url, image_url
                 ) VALUES (
-                    :sku, :title, :descrFiscal, :ean, :dun, :marca, :classe, :conservacao, :pesoLiquido, :pesoBruto, :url
+                    :sku, :title, :descrFiscal, :ean, :dun, :marca, :classe, :conservacao, :pesoLiquido, :pesoBruto, :url, :image_url
                 )
             """, produto_dados)
             
