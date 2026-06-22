@@ -15,6 +15,15 @@ def clean_val(val):
     # Limpa aspas que possam ter vindo do banco
     return str(val).strip("'\"")
 
+def clean_val_with_hyperlink(val, header):
+    if val is None:
+        return ""
+    val_str = str(val).strip("'\"")
+    if val_str.startswith("http://") or val_str.startswith("https://"):
+        label = "Ver Imagem" if "image" in header.lower() else "Abrir Link"
+        return f'=HYPERLINK("{val_str}", "{label}")'
+    return val_str
+
 def generate_xlsx(query, headers, filename):
     cursor.execute(query)
     rows = cursor.fetchall()
@@ -28,7 +37,10 @@ def generate_xlsx(query, headers, filename):
     
     # Adiciona as linhas de dados
     for row in rows:
-        clean_row = [clean_val(cell) for cell in row]
+        clean_row = []
+        for i, cell in enumerate(row):
+            header = headers[i]
+            clean_row.append(clean_val_with_hyperlink(cell, header))
         ws.append(clean_row)
         
     xlsx_path = os.path.join(download_dir, filename)
