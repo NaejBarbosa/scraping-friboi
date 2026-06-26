@@ -3,7 +3,7 @@ import subprocess
 import os
 from openpyxl import Workbook
 
-db_path = '/root/scraping-friboi/friboi_catalogo.db'
+db_path = '/root/projetos-scraping/scraping-friboi/friboi_catalogo.db'
 download_dir = '/sdcard/Download'
 
 conn = sqlite3.connect(db_path)

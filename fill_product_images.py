@@ -68,8 +68,8 @@ def make_request_with_retry(url, max_retries=3, delay=2):
 
 def main():
     parser = argparse.ArgumentParser(description="fill_product_images: Adiciona URLs de imagens de produtos no banco SQLite.")
-    parser.add_argument('--db', type=str, default='/root/scraping-friboi/friboi_catalogo.db', 
-                        help='Caminho absoluto para o banco SQLite (default: /root/scraping-friboi/friboi_catalogo.db)')
+    parser.add_argument('--db', type=str, default='/root/projetos-scraping/scraping-friboi/friboi_catalogo.db', 
+                        help='Caminho absoluto para o banco SQLite (default: /root/projetos-scraping/scraping-friboi/friboi_catalogo.db)')
     parser.add_argument('--delay', type=float, default=0.5, 
                         help='Intervalo de cortesia em segundos entre requisições (default: 0.5)')
     parser.add_argument('--limit', type=int, default=None,

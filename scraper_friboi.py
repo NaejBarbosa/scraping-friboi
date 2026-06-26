@@ -242,6 +242,21 @@ def extract_weights(title, descr_fiscal, weight_api, peso_vol_api):
         
     return clean_text(peso_liq), clean_text(peso_bruto)
 
+def calculate_ean13_dv(ean12):
+    """
+    Calcula o dígito verificador módulo 10 para um código EAN-13 de 12 dígitos.
+    """
+    soma = 0
+    for i, char in enumerate(ean12):
+        val = int(char)
+        if i % 2 == 0:
+            soma += val * 1
+        else:
+            soma += val * 3
+    resto = soma % 10
+    dv = (10 - resto) % 10
+    return str(dv)
+
 def extract_barcodes(html_content, api_ean):
     """
     Varre o HTML e dados estruturados usando Regex buscando padrões de EAN-13 e DUN-14.
@@ -250,12 +265,18 @@ def extract_barcodes(html_content, api_ean):
     ean = ""
     dun = ""
     
+    def process_12_digits(code):
+        if code.startswith(('789', '790')):
+            return code + calculate_ean13_dv(code)
+        else:
+            return "0" + code
+
     # 1. Processamento do EAN a partir da API (Fonte primária estruturada)
     if api_ean:
         api_ean = str(api_ean).strip()
-        # Se tem 12 dígitos, preenche com 0 à esquerda para formar o padrão EAN-13
+        # Se tem 12 dígitos, decide se calcula o DV ou adiciona zero à esquerda
         if len(api_ean) == 12 and api_ean.isdigit():
-            ean = "0" + api_ean
+            ean = process_12_digits(api_ean)
         elif len(api_ean) == 13 and api_ean.isdigit():
             ean = api_ean
             
@@ -268,7 +289,7 @@ def extract_barcodes(html_content, api_ean):
         else:
             ean_matches_12 = re.findall(r'\b\d{12}\b', html_content)
             if ean_matches_12:
-                ean = "0" + ean_matches_12[0]
+                ean = process_12_digits(ean_matches_12[0])
                 
     # 3. Varredura de DUN-14 (14 dígitos, código de caixa de distribuição) no HTML/Textos
     dun_matches_14 = re.findall(r'\b\d{14}\b', html_content)

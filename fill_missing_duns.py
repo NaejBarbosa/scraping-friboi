@@ -386,8 +386,8 @@ def try_find_dun_from_ean_search_ddg(ean_13):
 
 def main():
     parser = argparse.ArgumentParser(description="fill_missing_duns: Preenche códigos DUN-14 no catálogo da Friboi.")
-    parser.add_argument('--db', type=str, default='/root/scraping-friboi/friboi_catalogo.db', 
-                        help='Caminho absoluto para o banco SQLite (default: /root/scraping-friboi/friboi_catalogo.db)')
+    parser.add_argument('--db', type=str, default='/root/projetos-scraping/scraping-friboi/friboi_catalogo.db', 
+                        help='Caminho absoluto para o banco SQLite (default: /root/projetos-scraping/scraping-friboi/friboi_catalogo.db)')
     parser.add_argument('--delay', type=float, default=2.0, 
                         help='Intervalo de cortesia em segundos entre requisições de rede (default: 2.0)')
     parser.add_argument('--limit', type=int, default=None,

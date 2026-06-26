@@ -3,7 +3,7 @@ import csv
 import subprocess
 import os
 
-db_path = '/root/scraping-friboi/friboi_catalogo.db'
+db_path = '/root/projetos-scraping/scraping-friboi/friboi_catalogo.db'
 csv_path = '/sdcard/Download/duplicidades_friboi.csv'
 
 # Garante que o diretório de destino exista
