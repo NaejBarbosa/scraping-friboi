@@ -66,6 +66,30 @@ def make_request_with_retry(url, max_retries=3, delay=2):
         time.sleep(delay * (attempt + 1))
     return None
 
+def is_valid_product_image_url(url):
+    """
+    Valida sintaticamente se a URL aponta para uma imagem real de produto.
+    """
+    if not url:
+        return False
+        
+    url_lower = url.lower()
+    
+    # 1. Ignora placeholders conhecidos
+    if "no-image" in url_lower:
+        return False
+        
+    # 2. Exige que a imagem esteja na pasta de produtos
+    if "/products/" not in url_lower:
+        return False
+        
+    # 3. Rejeita banners, marcas e elementos comuns de layout
+    invalid_patterns = ["/banner", "/marketing/", "/theme", "/logo", "/avatar", "/brand/", "/icon", "/footer", "/header"]
+    if any(pattern in url_lower for pattern in invalid_patterns):
+        return False
+        
+    return True
+
 def main():
     parser = argparse.ArgumentParser(description="fill_product_images: Adiciona URLs de imagens de produtos no banco SQLite.")
     parser.add_argument('--db', type=str, default='/root/projetos-scraping/scraping-friboi/friboi_catalogo.db', 
@@ -138,9 +162,12 @@ def main():
                 if api_image:
                     # Converte URL relativa para absoluta se necessário
                     if api_image.startswith('/'):
-                        image_url = BASE_URL + api_image
+                        full_img_url = BASE_URL + api_image
                     else:
-                        image_url = api_image
+                        full_img_url = api_image
+                    
+                    if is_valid_product_image_url(full_img_url):
+                        image_url = full_img_url
                         
                     # Grava no banco de dados imediatamente
                     cursor.execute("""
@@ -149,8 +176,11 @@ def main():
                         WHERE sku = ?
                     """, (image_url, sku))
                     conn.commit()
-                    updated_count += 1
-                    print(f"  [OK] Imagem vinculada: {image_url}")
+                    if image_url != "N/A":
+                        updated_count += 1
+                        print(f"  [OK] Imagem vinculada: {image_url}")
+                    else:
+                        print("  [!] Imagem encontrada na API foi considerada inválida (marcado como N/A).")
                 else:
                     # Nenhum campo de imagem encontrado na API
                     cursor.execute("""

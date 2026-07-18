@@ -117,16 +117,11 @@ def populate_queue(db_path):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    # Verifica se já existem URLs cadastradas
+    # Verifica a quantidade atual de URLs cadastradas
     cursor.execute("SELECT COUNT(*) FROM fila_urls")
-    total_fila = cursor.fetchone()[0]
+    total_fila_anterior = cursor.fetchone()[0]
     
-    if total_fila > 0:
-        print(f"[*] Fila já existente com {total_fila} registros. Retomando estado anterior...")
-        conn.close()
-        return
-        
-    print(f"[*] Fila de URLs vazia. Baixando sitemap XML de produtos...")
+    print(f"[*] Fila atual contém {total_fila_anterior} registros. Baixando sitemap XML para checar novos produtos...")
     try:
         response = safe_request(SITEMAP_URL)
         if response.status_code != 200:
@@ -154,8 +149,9 @@ def populate_queue(db_path):
         conn.commit()
         
         cursor.execute("SELECT COUNT(*) FROM fila_urls")
-        total_inserido = cursor.fetchone()[0]
-        print(f"[*] {total_inserido} URLs salvas na fila para processamento.")
+        total_fila_atual = cursor.fetchone()[0]
+        novos_adicionados = total_fila_atual - total_fila_anterior
+        print(f"[*] Comparação de Fila: Anterior: {total_fila_anterior} | Atual: {total_fila_atual} | Novos produtos adicionados: {novos_adicionados}")
         
     except Exception as e:
         print(f"[!] Falha crítica ao processar sitemap: {str(e)}")
@@ -304,6 +300,30 @@ def extract_barcodes(html_content, api_ean):
         
     return ean, dun
 
+def is_valid_product_image_url(url):
+    """
+    Valida sintaticamente se a URL aponta para uma imagem real de produto.
+    """
+    if not url:
+        return False
+        
+    url_lower = url.lower()
+    
+    # 1. Ignora placeholders conhecidos
+    if "no-image" in url_lower:
+        return False
+        
+    # 2. Exige que a imagem esteja na pasta de produtos
+    if "/products/" not in url_lower:
+        return False
+        
+    # 3. Rejeita banners, marcas e elementos comuns de layout
+    invalid_patterns = ["/banner", "/marketing/", "/theme", "/logo", "/avatar", "/brand/", "/icon", "/footer", "/header"]
+    if any(pattern in url_lower for pattern in invalid_patterns):
+        return False
+        
+    return True
+
 def process_product(url, html_content):
     """
     Parseia a página do produto usando BeautifulSoup e Regex.
@@ -330,7 +350,7 @@ def process_product(url, html_content):
     cat_path = ""
     weight_api = None
     peso_vol_api = None
-    image_url = ""
+    image_url = "N/A"
     
     # 1. Tenta extrair dados iniciais do JSON-LD na página do produto (BeautifulSoup)
     script_ld = soup.find('script', id='CC-schema-org-server', type='application/ld+json')
@@ -369,9 +389,12 @@ def process_product(url, html_content):
             api_image = api_data.get('primaryFullImageURL') or api_data.get('primaryMediumImageURL') or api_data.get('primaryLargeImageURL')
             if api_image:
                 if api_image.startswith('/'):
-                    image_url = "https://www.friboionline.com.br" + api_image
+                    full_img_url = "https://www.friboionline.com.br" + api_image
                 else:
-                    image_url = api_image
+                    full_img_url = api_image
+                
+                if is_valid_product_image_url(full_img_url):
+                    image_url = full_img_url
     except Exception as e:
         # Prossegue com os dados capturados via HTML se a API falhar
         print(f"\n[!] Aviso: Não foi possível enriquecer o SKU {sku} via API: {str(e)}")

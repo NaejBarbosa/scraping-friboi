@@ -56,9 +56,23 @@ async function processarImagem(item, indice, total) {
     const buffer = Buffer.from(response.data);
 
     // 2. Processamento da imagem com Sharp:
-    //    - Redimensiona largura para max de 400px (mantendo proporção e sem ampliar imagens menores)
-    //    - Converte para .webp com qualidade de 80%
-    await sharp(buffer)
+    const sharpImg = sharp(buffer);
+    const metadata = await sharpImg.metadata();
+
+    // Validação de dimensões mínimas (evita logos pequenos, ícones de redes sociais ou pixels de rastreamento)
+    if (metadata.width < 150 || metadata.height < 150) {
+      throw new Error(`Imagem com resolução muito baixa (${metadata.width}x${metadata.height}px)`);
+    }
+
+    // Validação de proporção de aspecto (evita banners horizontais ou verticais de layout)
+    const aspect = metadata.width / metadata.height;
+    if (aspect > 2.5 || aspect < 0.4) {
+      throw new Error(`Proporção incompatível de banner (${aspect.toFixed(2)})`);
+    }
+
+    // - Redimensiona largura para max de 400px (mantendo proporção e sem ampliar imagens menores)
+    // - Converte para .webp com qualidade de 80%
+    await sharpImg
       .resize({
         width: 400,
         fit: 'inside',
